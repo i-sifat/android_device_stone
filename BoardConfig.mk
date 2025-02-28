@@ -57,13 +57,15 @@ BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := default
 # HIDL
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := \
     hardware/qcom-caf/common/vendor_framework_compatibility_matrix.xml \
-    $(DEVICE_PATH)/device_framework_matrix.xml
+    hardware/qcom-caf/common/vendor_framework_compatibility_matrix_legacy.xml \
+    vendor/lineage/config/device_framework_matrix.xml \
+    $(DEVICE_PATH)/device_framework_matrix.xml \
+    $(DEVICE_PATH)/dolby_compatibility_framework_matrix.xml
 
-DEVICE_MANIFEST_FILE := \
-    $(DEVICE_PATH)/manifest.xml
+DEVICE_MANIFEST_FILE := $(DEVICE_PATH)/manifest.xml
 
-DEVICE_MATRIX_FILE := \
-    hardware/qcom-caf/common/compatibility_matrix.xml
+DEVICE_MATRIX_FILE := hardware/qcom-caf/common/compatibility_matrix.xml
+
 
 # HWUI
 HWUI_COMPILE_FOR_PERF := true
@@ -180,7 +182,6 @@ WIFI_HIDL_FEATURE_DUAL_INTERFACE := true
 WIFI_HIDL_UNIFIED_SUPPLICANT_SERVICE_RC_ENTRY := true
 WPA_SUPPLICANT_VERSION := VER_0_8_X
 
-
 # MistOS device info for Poco X5 5G
 ro.mist.display=1080x2400,120Hz
 ro.mist.battery=5000mAh
@@ -191,3 +192,11 @@ ro.mist.platform=holi-SM6375
 ro.mist.screen=6.67"
 ro.mist.device.name=Poco X5 5G
 
+# Inherit from the proprietary version
+include vendor/xiaomi/stone/BoardConfigVendor.mk
+
+# Enable Dolby Atmos HW effects
+AUDIO_FEATURE_ENABLED_HW_ACCELERATED_EFFECTS := true
+
+# To allow Dolby ELF files to be copied to the product partition
+BUILD_BROKEN_ELF_PREBUILT_PRODUCT_COPY_FILES := true
