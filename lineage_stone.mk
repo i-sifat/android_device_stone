@@ -18,8 +18,22 @@ $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 TARGET_SCREEN_HEIGHT := 2400
 TARGET_SCREEN_WIDTH := 1080
 
+# Maintainer
+MISTOS_MAINTAINER := Sifat
+
+# Enable GMS (Pico recommended for low bloat)
+WITH_GMS := true
+TARGET_USES_PICO_GAPPS := true
+
+# UI features
+TARGET_ENABLE_BLUR := true
+
 TARGET_EXCLUDES_AUDIOFX := true
 TARGET_ENABLE_BLUR := true
+
+# Face Unlock
+TARGET_FACE_UNLOCK_SUPPORTED := true
+
 
 PRODUCT_BRAND := Redmi
 PRODUCT_DEVICE := stone

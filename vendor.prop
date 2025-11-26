@@ -237,3 +237,6 @@ vendor.usb.use_gadget_hal=0
 
 # WiFi
 wifi.aware.interface=wifi-aware0
+
+#Disable blurs during app launch
+ro.launcher.blur.appLaunch=0

@@ -179,3 +179,15 @@ WIFI_HIDL_FEATURE_AWARE := true
 WIFI_HIDL_FEATURE_DUAL_INTERFACE := true
 WIFI_HIDL_UNIFIED_SUPPLICANT_SERVICE_RC_ENTRY := true
 WPA_SUPPLICANT_VERSION := VER_0_8_X
+
+
+# MistOS device info for Poco X5 5G
+ro.mist.display=1080x2400,120Hz
+ro.mist.battery=5000mAh
+ro.mist.soc=Snapdragon 695 5G (SM6375)
+ro.mist.camera=48MP + 8MP + 2MP
+ro.mist.front=13MP
+ro.mist.platform=holi-SM6375
+ro.mist.screen=6.67"
+ro.mist.device.name=Poco X5 5G
+
