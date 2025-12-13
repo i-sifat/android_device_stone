@@ -1,7 +1,20 @@
 #
-# SPDX-FileCopyrightText: The LineageOS Project
+# Copyright (C) 2023-2024 The LineageOS Project
+#
 # SPDX-License-Identifier: Apache-2.0
 #
+
+# BCR
+$(call inherit-product-if-exists, vendor/bcr/bcr.mk)
+
+# Datura
+PRODUCT_PACKAGES += Datura
+
+# Dolby
+$(call inherit-product-if-exists, hardware/dolby/dolby.mk)
+
+# Viper
+$(call inherit-product-if-exists, packages/apps/ViPER4AndroidFX/config.mk)
 
 # Add common definitions for Qualcomm
 $(call inherit-product, hardware/qcom-caf/common/common.mk)
@@ -13,7 +26,7 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
 $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 
 # A/B
-$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/launch_with_vendor_ramdisk.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/launch.mk)
 
 # AAPT
 PRODUCT_AAPT_CONFIG := normal
@@ -61,7 +74,8 @@ AUDIO_SKU_DIR := sku_holi
 PRODUCT_COPY_FILES += \
      $(LOCAL_PATH)/audio/audio_effects.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/$(AUDIO_SKU_DIR)/audio_effects.xml \
      $(LOCAL_PATH)/audio/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/audio_policy_configuration.xml \
-     $(LOCAL_PATH)/audio/audio_policy_volumes.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/$(AUDIO_SKU_DIR)/audio_policy_volumes.xml
+     $(LOCAL_PATH)/audio/audio_policy_volumes.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/$(AUDIO_SKU_DIR)/audio_policy_volumes.xml \
+     $(LOCAL_PATH)/audio/mixer_paths.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio/mixer_paths.xml
 
 PRODUCT_COPY_FILES += \
     $(AUDIO_HAL_DIR)/configs/holi/audio_tuning_mixer.txt:$(TARGET_COPY_OUT_VENDOR)/etc/audio_tuning_mixer.txt
@@ -105,8 +119,9 @@ $(call soong_config_set,camera,override_format_from_reserved,true)
 # DebugFS
 PRODUCT_SET_DEBUGFS_RESTRICTIONS := true
 
-# Disable Matlog
-TARGET_DISABLE_MATLOG := true
+# Device-specific settings
+PRODUCT_PACKAGES += \
+    XiaomiParts
 
 # Display
 PRODUCT_PACKAGES += \
@@ -132,6 +147,8 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     hardware/qcom-caf/sm8350/display/config/snapdragon_color_libs_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/snapdragon_color_libs_config.xml \
     $(LOCAL_PATH)/configs/display_id_4630947218746568833.xml:$(TARGET_COPY_OUT_VENDOR)/etc/displayconfig/display_id_4630947218746568833.xml
+
+$(call soong_config_set,stagefright,target_disable_thumbnail_block_model,true)
 
 # DRM
 PRODUCT_PACKAGES += \
@@ -209,6 +226,7 @@ $(call soong_config_set,libinit,vendor_init_lib,//$(LOCAL_PATH):init_xiaomi_ston
 # Input
 PRODUCT_PACKAGES += \
     gpio-keys.kl \
+    holi-qrdsku1-snd-card_Button_Jack.kl \
     uinput-fpc.idc \
     uinput-fpc.kl \
     uinput-goodix.idc \
@@ -261,29 +279,27 @@ PRODUCT_PACKAGES += \
 
 # Overlays
 DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay-lineage
-
 PRODUCT_ENFORCE_RRO_TARGETS := *
 
+# Overlay RRO
 PRODUCT_PACKAGES += \
-    CarrierConfigOverlayCommon \
-    DialerOverlayCommon \
-    NcmTetheringOverlay \
-    SettingsProviderOverlayCommon \
-    TelephonyOverlayCommon
-
-PRODUCT_PACKAGES += \
-    FrameworkOverlayTarget \
-    SettingsOverlayTarget \
-    SystemUIOverlayTarget \
-    WifiOverlayTarget
-
-PRODUCT_PACKAGES += \
+    CarrierConfigOverlayStone \
+    DialerOverlayStone \
+    TelephonyOverlayStone \
+    FrameworkOverlayStone \
+    SettingsOverlayStone \
+    SettingsProviderOverlayStone \
+    SystemUIOverlayStone \
+    WifiOverlayStone \
     FrameworkOverlayMoonstone \
     FrameworkOverlaySunstone
 
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/overlay/config-odm.xml:$(TARGET_COPY_OUT_ODM)/overlay/config/config.xml \
-    $(LOCAL_PATH)/overlay/config-vendor.xml:$(TARGET_COPY_OUT_VENDOR)/overlay/config/config.xml
+    $(LOCAL_PATH)/rro_overlays/config-odm.xml:$(TARGET_COPY_OUT_ODM)/overlay/config/config.xml \
+    $(LOCAL_PATH)/rro_overlays/config-vendor.xml:$(TARGET_COPY_OUT_VENDOR)/overlay/config/config.xml
+
+PRODUCT_PACKAGES += \
+    NcmTetheringOverlay
 
 # Partitions
 PRODUCT_PACKAGES += \
@@ -357,7 +373,7 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/powerhint.json:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.json
 
 PRODUCT_COPY_FILES += \
-    system/core/libprocessgroup/profiles/task_profiles.json:$(TARGET_COPY_OUT_VENDOR)/etc/task_profiles.json
+    $(LOCAL_PATH)/configs/task_profiles.json:$(TARGET_COPY_OUT_VENDOR)/etc/task_profiles.json
 
 # Protobuf
 PRODUCT_PACKAGES += \
@@ -369,6 +385,10 @@ PRODUCT_PACKAGES += \
     libjson \
     libqti_vndfwk_detect.vendor \
     libvndfwk_detect_jni.qti.vendor
+
+# Recovery
+PRODUCT_PACKAGES += \
+    init_xiaomi_stone.recovery
 
 # RIL
 PRODUCT_PACKAGES += \
@@ -427,11 +447,11 @@ PRODUCT_SHIPPING_API_LEVEL := 31
 # Soong
 PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH) \
+    hardware/xiaomi \
     hardware/google/interfaces \
     hardware/google/pixel \
     hardware/lineage/interfaces/power-libperfmgr \
     hardware/qcom-caf/common/libqti-perfd-client \
-    hardware/xiaomi \
     vendor/qcom/opensource/usb/etc
 
 # Telephony

@@ -1,11 +1,18 @@
 //
-// SPDX-FileCopyrightText: The LineageOS Project
+// Copyright (C) 2024 The LineageOS Project
+//
 // SPDX-License-Identifier: Apache-2.0
 //
 
 prebuilt_usr_keylayout {
     name: "gpio-keys.kl",
     src: "gpio-keys.kl",
+    vendor: true,
+}
+
+prebuilt_usr_keylayout {
+    name: "holi-qrdsku1-snd-card_Button_Jack.kl",
+    src: "holi-qrdsku1-snd-card_Button_Jack.kl",
     vendor: true,
 }
 

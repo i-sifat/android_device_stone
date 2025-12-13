@@ -30,6 +30,18 @@
 /vendor/lib64/libwa_widelens_undistort\.so                                     u:object_r:same_process_hal_file:s0
 /vendor/lib64/libxml2_vendor\.so                                               u:object_r:same_process_hal_file:s0
 
+# Core Control
+/sys/devices/system/cpu/cpu[0-7]/online					       u:object_r:vendor_sysfs_corecontrol:s0
+
+# DC Dimming & HBM
+/sys/devices/platform/soc/soc:qcom,dsi-display-primary/dimlayer_exposure       u:object_r:vendor_sysfs_graphics:s0
+/sys/devices/platform/soc/5e00000.qcom,mdss_mdp/drm/card0/card0-DSI-1/hbm      u:object_r:vendor_sysfs_graphics:s0
+
+# Fastcharge
+/sys/kernel/fast_charge/force_fast_charge                  		       u:object_r:vendor_sysfs_fastcharge:s0
+/sys/kernel/fastchgtoggle/mode	         		      		       u:object_r:vendor_sysfs_fastcharge:s0
+/sys/kernel/fastchgtoggle/thermals         		      		       u:object_r:vendor_sysfs_fastcharge:s0
+
 # Fingerprint
 /dev/goodix_fp                                                                 u:object_r:vendor_fingerprint_device:s0
 /dev/spidev0.0                                                                 u:object_r:vendor_fingerprint_device:s0
@@ -40,6 +52,9 @@
 # Mlipay
 /(vendor|system/vendor)/bin/mlipayd@1.1                                        u:object_r:hal_mlipay_default_exec:s0
 
+# Power
+/vendor/bin/hw/android\.hardware\.power-service\.lineage-libperfmgr 	       u:object_r:hal_power_default_exec:s0
+
 # Sensors
 /vendor/bin/hw/android\.hardware\.sensors-service\.xiaomi-multihal             u:object_r:hal_sensors_default_exec:s0
 
@@ -49,3 +64,6 @@
 
 # Xiaomi MAC
 /data/vendor/mac_addr(/.*)?                                                    u:object_r:vendor_wifi_vendor_data_file:s0
+
+# ZRAM
+/sys/block/zram0/comp_algorithm 					       u:object_r:sysfs_zram:s0

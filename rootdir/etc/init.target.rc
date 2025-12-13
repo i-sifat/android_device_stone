@@ -118,13 +118,15 @@ on early-boot
      verity_update_state
     # M17-T code for HQ-267809 by dongshuai at 2022.12.8 end
 
+    # Enable WLAN cold boot calibration
+    write /sys/devices/platform/soc/b0000000.qcom,cnss-qca6490/fs_ready 1
+
 # add PcbaConfigSet by wanggang8
 service pcbaconfig /system/vendor/bin/PcbaConfigSet
     class core
     user root
     group root system vendor_qti_diag
     oneshot
-
 
 on boot
     chown system system /sys/class/drm/card0-DSI-1/doze_brightness
@@ -162,6 +164,10 @@ on boot
 
     #zhangxiaodan To realize the communication between framework and thermal, we need to implement sys node in kernel
     chown system system /sys/class/thermal/thermal_message/sconfig
+    chmod 0664 /sys/class/thermal/thermal_message/sconfig
+    chown system system /sys/class/thermal/thermal_message/sconfig
+    chmod 0666 /sys/class/thermal/thermal_message/temp_state
+    chown system system /sys/class/thermal/thermal_message/temp_state
 
     # add for fingerprint
     chown system system /sys/bus/platform/devices/soc/soc:fpc1020/compatible_all
@@ -288,3 +294,8 @@ on property:ro.vendor.display.svi=1 && property:sys.boot_completed=1
 
 on property:ro.boot.hwname=*
     setprop ro.boot.product.hardware.sku ${ro.boot.hwname}
+
+# Restrict access on this node
+on property:sys.boot_completed=1
+    # Only owner can acces this node
+    chmod 440 /proc/net/unix

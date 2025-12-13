@@ -32,64 +32,75 @@
 #=============================================================================
 
 function configure_zram_parameters() {
-	MemTotalStr=`cat /proc/meminfo | grep MemTotal`
-	MemTotal=${MemTotalStr:16:8}
+    local zramSizeGB=$(getprop persist.vendor.zram.size)
+    local zramComp=$(getprop persist.vendor.zram.comp_algorithm)
+    local swappiness=$(getprop persist.vendor.vm.swappiness)
 
-	# Zram disk - 75% for < 2GB devices .
-	# For >2GB devices, size = 50% of RAM size. Limit the size to 4GB.
+    # Set swappiness
+    echo ${swappiness:-60} > /proc/sys/vm/swappiness
 
-	let RamSizeGB="( $MemTotal / 1048576 ) + 1"
-	diskSizeUnit=M
-	if [ $RamSizeGB -le 2 ]; then
-		let zRamSizeMB="( $RamSizeGB * 1024 ) * 3 / 4"
-	else
-		let zRamSizeMB="( $RamSizeGB * 1024 ) / 2"
-	fi
+    case "$zramSizeGB" in
+        0)
+            zRamSizeMB=0
+            echo "ZRAM disabled by user choice."
+            return
+            ;;
+        2)
+            zRamSizeMB=2048
+            ;;
+        4)
+            zRamSizeMB=4096
+            ;;
+        8)
+            zRamSizeMB=8192
+            ;;
+        *)
+            # Default dynamic calculation
+            MemTotalStr=$(grep MemTotal /proc/meminfo)
+            MemTotal=${MemTotalStr:16:8}
+            let RamSizeGB="( $MemTotal / 1048576 ) + 1"
+            if [ $RamSizeGB -le 2 ]; then
+                let zRamSizeMB="( $RamSizeGB * 1024 ) * 3 / 4"
+            else
+                let zRamSizeMB="( $RamSizeGB * 1024 ) / 2"
+            fi
+            [ $zRamSizeMB -gt 4096 ] && zRamSizeMB=4096
+            ;;
+    esac
 
-	# use MB avoid 32 bit overflow
-	if [ $zRamSizeMB -gt 4096 ]; then
-		let zRamSizeMB=4096
-	fi
+    if [ -f /sys/block/zram0/disksize ]; then
+        # Set compression algorithm
+        if [ -n "$zramComp" ] && grep -q "$zramComp" /sys/block/zram0/comp_algorithm; then
+            echo "$zramComp" > /sys/block/zram0/comp_algorithm
+        else
+            echo "lz4" > /sys/block/zram0/comp_algorithm
+        fi
 
-	if [ -f /sys/block/zram0/disksize ]; then
-		if [ -f /sys/block/zram0/use_dedup ]; then
-			echo 1 > /sys/block/zram0/use_dedup
-		fi
-		echo "$zRamSizeMB""$diskSizeUnit" > /sys/block/zram0/disksize
+        if [ -f /sys/block/zram0/use_dedup ]; then
+            echo 1 > /sys/block/zram0/use_dedup
+        fi
+        echo "${zRamSizeMB}M" > /sys/block/zram0/disksize
 
-		# ZRAM may use more memory than it saves if SLAB_STORE_USER
-		# debug option is enabled.
-		if [ -e /sys/kernel/slab/zs_handle ]; then
-			echo 0 > /sys/kernel/slab/zs_handle/store_user
-		fi
-		if [ -e /sys/kernel/slab/zspage ]; then
-			echo 0 > /sys/kernel/slab/zspage/store_user
-		fi
+        if [ -e /sys/kernel/slab/zs_handle ]; then
+            echo 0 > /sys/kernel/slab/zs_handle/store_user
+        fi
+        if [ -e /sys/kernel/slab/zspage ]; then
+            echo 0 > /sys/kernel/slab/zspage/store_user
+        fi
 
-		mkswap /dev/block/zram0
-		swapon /dev/block/zram0 -p 32758
-	fi
+        mkswap /dev/block/zram0
+        swapon /dev/block/zram0 -p 32758
+    fi
 }
 
 function configure_memory_parameters() {
-	# Set Memory parameters.
-
-	# Set swappiness to 60 for all targets
-	echo 60 > /proc/sys/vm/swappiness
-
-	# Set lz4 algorithm for zRAM compression
-	echo lz4 > /sys/block/zram0/comp_algorithm
-
-	# Disable wsf for all targets beacause we are using efk.
-	# wsf Range : 1..1000 So set to bare minimum value 1.
-	echo 1 > /proc/sys/vm/watermark_scale_factor
-	configure_zram_parameters
-
-        #M17-T code for HQ-264248 by liuhelong at 2022/12/8 start
-	#Spawn 1 kswapd threads which can help in fast reclaiming of pages
-	echo 1 > /proc/sys/vm/kswapd_threads
-        #M17-T code for HQ-264248 by liuhelong at 2022/12/8 end
-
+    # Disable wsf for all targets because we are using efk.
+    # wsf Range : 1..1000 So set to bare minimum value 1.
+    echo 1 > /proc/sys/vm/watermark_scale_factor
+    configure_zram_parameters
+        
+    # Spawn 1 kswapd threads which can help in fast reclaiming of pages
+    echo 1 > /proc/sys/vm/kswapd_threads
 }
 
 # configure governor settings for silver cluster
